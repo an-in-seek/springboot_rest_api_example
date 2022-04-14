@@ -48,6 +48,7 @@
             // 파일 업로드
             function uploadFile() {
                 const files = uploadFiles.files;
+                if (files.length === 0) return false;
                 const formData = new FormData();
                 for (const file of files) {
                     formData.append("files", file);
@@ -117,8 +118,11 @@
 <body>
     <div>
         <p><b>파일 업로드</b></p>
-        <input type="file" id="uploadFiles" multiple="multiple">
-        <input type="button" id="upload" value="업로드">
+        <form>
+            <input type="file" id="uploadFiles" multiple="multiple">
+            <input type="reset" value="초기화">
+            <input type="button" id="upload" value="업로드">
+        </form>
     </div>
     <div>
         <p>
