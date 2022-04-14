@@ -9,8 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,23 +25,23 @@ public class FileService {
         this.fileStorageLocation = Paths.get(fileUploadProperties.getLocation()).toAbsolutePath().normalize();
     }
 
-    public Resource loadFile(String fileName) throws FileNotFoundException {
+    public Resource loadFile(String fileName) {
         try {
             Path filePath = fileStorageLocation.resolve(fileName).normalize();
             Resource resource = new UrlResource(filePath.toUri());
             if (resource.exists()) {
                 return resource;
             } else {
-                throw new FileNotFoundException("File not found " + fileName);
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found " + fileName);
             }
-        } catch (MalformedURLException | FileNotFoundException ex) {
-            throw new FileNotFoundException("File not found " + fileName);
+        } catch (MalformedURLException ex) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found " + fileName);
         }
     }
 
     @Transactional
-    public List<FileEntity> saveFileList(List<FileEntity> fileList) {
-        return fileRepository.saveAll(fileList);
+    public void saveFileList(List<FileEntity> fileList) {
+        fileRepository.saveAll(fileList);
     }
 
     @Transactional(readOnly = true)

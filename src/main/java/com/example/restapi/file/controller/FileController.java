@@ -12,10 +12,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.springframework.web.server.ResponseStatusException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +48,7 @@ public class FileController {
     }
 
     @GetMapping("/download/{fileName}")
-    public ResponseEntity<?> downloadFile(@PathVariable String fileName, HttpServletRequest request) throws FileNotFoundException {
+    public ResponseEntity<?> downloadFile(@PathVariable String fileName, HttpServletRequest request) {
         Resource resource = fileService.loadFile(fileName);
         String contentType = null;
         try {
@@ -57,7 +56,6 @@ public class FileController {
         } catch (IOException ex) {
             log.info("Could not determine file type.");
         }
-        // Fallback to the default content type if type could not be determined
         if (contentType == null) {
             contentType = "application/octet-stream";
         }
@@ -76,17 +74,10 @@ public class FileController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteFile(@PathVariable Long id) {
         String url = fileService.findById(id).getUrl();
-        fileService.deleteById(id);
         File file = new File(url);
-        if (file.exists()) {
-            if (file.delete()) {
-                log.info("파일삭제 성공");
-            } else {
-                log.info("파일삭제 실패");
-            }
-        } else {
-            log.info("파일이 존재하지 않습니다.");
-        }
+        if (!file.exists()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "파일이 존재하지 않습니다.");
+        if (!file.delete()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "파일삭제 실패");
+        fileService.deleteById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
