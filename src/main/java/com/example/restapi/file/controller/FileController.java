@@ -37,7 +37,7 @@ public class FileController {
             String fileName = file.getOriginalFilename();
             String fileUrl = location + fileName;
             Long fileSize = file.getSize();
-            file.transferTo(new File(location + fileName));
+            file.transferTo(new File(fileUrl));
             fileList.add(FileEntity.builder()
                     .name(fileName)
                     .url(fileUrl)
@@ -75,13 +75,8 @@ public class FileController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteFile(@PathVariable Long id) {
-        // 조회
         String url = fileService.findById(id).getUrl();
-        
-        // DB 에서 삭제
         fileService.deleteById(id);
-
-        // 로컬 서버 경로에서 삭제
         File file = new File(url);
         if (file.exists()) {
             if (file.delete()) {

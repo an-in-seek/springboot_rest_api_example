@@ -7,6 +7,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.FileNotFoundException;
@@ -26,22 +27,6 @@ public class FileService {
         this.fileStorageLocation = Paths.get(fileUploadProperties.getLocation()).toAbsolutePath().normalize();
     }
 
-    public List<FileEntity> saveFileList(List<FileEntity> fileList) {
-        return fileRepository.saveAll(fileList);
-    }
-
-    public List<FileEntity> findAll() {
-        return fileRepository.findAll();
-    }
-
-    public FileEntity findById(Long id) {
-        return fileRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    }
-
-    public void deleteById(Long id) {
-        fileRepository.deleteById(id);
-    }
-
     public Resource loadFile(String fileName) throws FileNotFoundException {
         try {
             Path filePath = fileStorageLocation.resolve(fileName).normalize();
@@ -56,5 +41,23 @@ public class FileService {
         }
     }
 
+    @Transactional
+    public List<FileEntity> saveFileList(List<FileEntity> fileList) {
+        return fileRepository.saveAll(fileList);
+    }
 
+    @Transactional(readOnly = true)
+    public List<FileEntity> findAll() {
+        return fileRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public FileEntity findById(Long id) {
+        return fileRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    @Transactional
+    public void deleteById(Long id) {
+        fileRepository.deleteById(id);
+    }
 }
