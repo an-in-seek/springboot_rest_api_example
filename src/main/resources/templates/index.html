@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>파일 관리</title>
+    <style>
+        table {
+            width: 100%;
+            border: 1px solid #444444;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #444444;
+            padding: 10px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+    </style>
+    <script>
+        window.addEventListener('DOMContentLoaded', (event) => {
+            // 변수 세팅
+            const baseUrl = "http://localhost:8080/api/files";
+            const uploadFiles = document.getElementById("uploadFiles");
+            const uploadBtn = document.getElementById("upload");
+            const searchBtn = document.getElementById("search");
+            const deleteBtn = document.getElementById("delete");
+            const tbody = document.querySelector("#tbl tbody");
+
+            // 업로드 버튼 클릭
+            uploadBtn.addEventListener("click", (e) => {
+                uploadFile();
+            });
+
+            // 조회 버튼 클릭
+            searchBtn.addEventListener("click", (e) => {
+                searchFile();
+            });
+
+            // 삭제 버튼 클릭
+            deleteBtn.addEventListener("click", (e) => {
+                deleteFile();
+            });
+
+            // 파일 업로드
+            function uploadFile() {
+                const files = uploadFiles.files;
+                const formData = new FormData();
+                for (const file of files) {
+                    formData.append("files", file);
+                }
+                const url = `${baseUrl}/upload`;
+                fetch(url, {
+                    method: "POST",
+                    body: formData
+                }).then((response) => {
+                    if (!response.ok) throw new Error('Network response was not ok.');
+                    searchFile();
+                }).catch((error) => {
+                    alert(error);
+                })
+            }
+
+            // 파일 삭제
+            function deleteFile() {
+                const chkList = document.getElementsByName("chk");
+                for (chk of chkList) {
+                    if (!chk.checked) continue;
+                    const id = chk.getAttribute("id");
+                    const url = `${baseUrl}/${id}`;
+                    fetch(url, {
+                        method: "DELETE"
+                    }).then((response) => {
+                        if (!response.ok) throw new Error('Network response was not ok.');
+                        searchFile();
+                    }).catch((error) => {
+                        alert(error);
+                    })
+                }
+            }
+
+            // 파일 조회
+            function searchFile() {
+                const url = baseUrl;
+                fetch(url).then((response) => {
+                    if (response.ok) return response.json();
+                    throw new Error('Network response was not ok.');
+                }).then((dataList) => {
+                    let row = "";
+                    if (dataList.length === 0) {
+                        row += `<tr>`;
+                        row += `<td colspan="5" class="text-center">조회된 데이터가 없습니다.</td>`;
+                        row += `</tr>`;
+                    } else {
+                        for (const data of dataList) {
+                            row += `<tr>`;
+                            row += `<td><input type="checkbox" id="${data.id}" name="chk"></td>`;
+                            row += `<td>${data.id}</td>`;
+                            row += `<td><a href="${url}/download/${data.name}">${data.name}</a></td>`;
+                            row += `<td>${data.url}</td>`;
+                            row += `<td>${data.size}</td>`;
+                            row += `</tr>`;
+                        }
+                    }
+                    tbody.innerHTML = row;
+                }).catch((error) => {
+                    alert(error);
+                })
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <div>
+        <p><b>파일 업로드</b></p>
+        <input type="file" id="uploadFiles" multiple="multiple">
+        <input type="button" id="upload" value="업로드">
+    </div>
+    <div>
+        <p>
+            <b>업로드된 파일 목록</b>
+            <button id="search">조회</button>
+            <button id="delete">삭제</button>
+        </p>
+        <table id="tbl">
+            <thead>
+                <tr>
+                    <th>Check</th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Path</th>
+                    <th>Size</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</body>
+
+</html>

@@ -2,7 +2,7 @@ spring:
   servlet:
     multipart:
       enabled: true
-      location: ${java.io.tmpdir}
+      location: D:/upload/
       max-file-size: 100MB
       max-request-size: 100MB
       file-size-threshold: 1MB
