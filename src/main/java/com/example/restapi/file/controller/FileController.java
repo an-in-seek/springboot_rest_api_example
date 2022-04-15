@@ -4,22 +4,22 @@ import com.example.restapi.file.entity.FileEntity;
 import com.example.restapi.file.properties.FileProperties;
 import com.example.restapi.file.service.FileService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/files")
@@ -28,15 +28,15 @@ public class FileController {
     private final FileService fileService;
     private final FileProperties fileProperties;
 
+    // 파일 업로드
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFiles(@RequestPart List<MultipartFile> files) throws IOException {
-        final String location = fileProperties.getLocation();
         final List<FileEntity> fileList = new ArrayList<>();
         for (MultipartFile file : files) {
             String fileName = file.getOriginalFilename();
-            String fileUrl = location + fileName;
+            String fileUrl = fileProperties.getLocation() + fileName;
             Long fileSize = file.getSize();
-            file.transferTo(new File(fileUrl));
+            file.transferTo(Paths.get(fileUrl));
             fileList.add(FileEntity.builder()
                     .name(fileName)
                     .url(fileUrl)
@@ -47,36 +47,32 @@ public class FileController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
+    // 파일 다운로드
     @GetMapping("/download/{fileName}")
-    public ResponseEntity<?> downloadFile(@PathVariable String fileName, HttpServletRequest request) {
+    public ResponseEntity<?> downloadFile(@PathVariable String fileName, HttpServletRequest request) throws IOException {
         Resource resource = fileService.loadFile(fileName);
-        String contentType = null;
-        try {
-            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
-        } catch (IOException ex) {
-            log.info("Could not determine file type.");
-        }
-        if (contentType == null) {
-            contentType = "application/octet-stream";
-        }
+        String absolutePath = resource.getFile().getAbsolutePath();
+        String contentType = request.getServletContext().getMimeType(absolutePath);
+        if (!StringUtils.hasText(contentType)) contentType = "application/octet-stream";
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
     }
 
+    // 파일 리스트 조회
     @GetMapping
     public ResponseEntity<?> getFiles() {
         List<FileEntity> files = fileService.findAll();
         return new ResponseEntity<>(files, HttpStatus.OK);
     }
 
+    // ID로 파일 삭제
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteFile(@PathVariable Long id) {
+    public ResponseEntity<?> deleteFile(@PathVariable Long id) throws IOException {
         String url = fileService.findById(id).getUrl();
-        File file = new File(url);
-        if (!file.exists()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "파일이 존재하지 않습니다.");
-        if (!file.delete()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "파일삭제 실패");
+        Path path = Paths.get(url);
+        Files.delete(path);
         fileService.deleteById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
