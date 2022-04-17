@@ -4,7 +4,6 @@ import com.example.restapi.board.entity.Board;
 import com.example.restapi.board.repository.BoardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service

@@ -2,9 +2,8 @@ package com.example.restapi.excel.resource;
 
 import com.example.restapi.excel.annotation.ExcelColumnName;
 import com.example.restapi.excel.annotation.ExcelFileName;
-import com.example.restapi.excel.util.SuperClassReflectionUtils;
+import com.example.restapi.excel.util.SuperClassReflectionUtil;
 import org.springframework.util.StringUtils;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,7 +16,7 @@ public class ExcelRenderResourceFactory {
         String fileName = getFileName(type);
         Map<String, String> headerNamesMap = new LinkedHashMap<>();
         List<String> fieldNames = new ArrayList<>();
-        for (Field field : SuperClassReflectionUtils.getAllFields(type)) {
+        for (Field field : SuperClassReflectionUtil.getAllFields(type)) {
             if (field.isAnnotationPresent(ExcelColumnName.class)) {
                 ExcelColumnName annotation = field.getAnnotation(ExcelColumnName.class);
                 fieldNames.add(field.getName());

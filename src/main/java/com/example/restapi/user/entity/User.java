@@ -1,4 +1,4 @@
-package com.example.restapi.board.entity;
+package com.example.restapi.user.entity;
 
 import com.example.restapi.excel.annotation.ExcelColumnName;
 import com.example.restapi.excel.annotation.ExcelFileName;
@@ -12,8 +12,8 @@ import javax.persistence.*;
 @Getter
 @Setter
 @NoArgsConstructor
-@ExcelFileName(fileName = "게시글목록")
-public class Board {
+@ExcelFileName(fileName = "사용자목록")
+public class User {
 
     @Id
     @Column
@@ -22,16 +22,16 @@ public class Board {
     private Long id;
 
     @Column
-    @ExcelColumnName(headerName = "제목")
-    private String title;
+    @ExcelColumnName(headerName = "이름")
+    private String name;
 
     @Column
-    @ExcelColumnName(headerName = "내용")
-    private String content;
+    @ExcelColumnName(headerName = "이메일")
+    private String email;
 
     @Builder
-    public Board(String title, String content) {
-        this.title = title;
-        this.content = content;
+    public User(String name, String email) {
+        this.name = name;
+        this.email = email;
     }
 }
